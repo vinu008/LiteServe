@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  liteserve:
+    build: .
+    ports:
+      - "8000:8000"
+      - "9090:9090"
+    volumes:
+      - ./configs:/app/configs
+      - model-cache:/root/.cache/huggingface
+    environment:
+      - LITESERVE_CONFIG=/app/configs/default.yaml
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    depends_on:
+      - liteserve
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./dashboards:/var/lib/grafana/dashboards
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=liteserve
+    depends_on:
+      - prometheus
+
+volumes:
+  model-cache:
+  prometheus-data:
+  grafana-data:

@@ -1,0 +1,39 @@
+# LiteServe Local Config — uses TinyLlama (1.1B) so it runs on CPU/MPS/any GPU
+# Good for validation. For real benchmarks use configs/gpu.yaml
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+
+models:
+  - name: "tinyllama"
+    path: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+    quantization: null
+    max_model_len: 2048
+    default: true
+
+scheduler:
+  max_batch_size: 8
+  max_waiting_time_ms: 100
+  memory_budget_pct: 0.9
+  preemption_policy: "fcfs"
+  scheduling_interval_ms: 1
+
+kv_cache:
+  block_size: 16
+  swap_space_gb: 1
+
+router:
+  strategy: "quality_first"
+  gpu_util_high_threshold: 0.85
+  gpu_util_low_threshold: 0.4
+  queue_depth_threshold: 20
+
+metrics:
+  enabled: false
+  port: 9090
+
+logging:
+  level: "INFO"
+  format: "text"

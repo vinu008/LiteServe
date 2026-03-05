@@ -1,0 +1,166 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "title": "Throughput (tokens/sec)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(liteserve_tokens_generated_total[1m])",
+          "legendFormat": "tokens/sec"
+        }
+      ]
+    },
+    {
+      "title": "Request Latency (p50/p95/p99)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(liteserve_request_latency_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(liteserve_request_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(liteserve_request_latency_seconds_bucket[5m]))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "title": "Time to First Token (TTFT)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(liteserve_time_to_first_token_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(liteserve_time_to_first_token_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "title": "GPU Utilization",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "liteserve_gpu_utilization_percent",
+          "legendFormat": "GPU %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "GPU Memory (GB)",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "targets": [
+        {
+          "expr": "liteserve_gpu_memory_used_gb",
+          "legendFormat": "Used"
+        },
+        {
+          "expr": "liteserve_gpu_memory_total_gb",
+          "legendFormat": "Total"
+        }
+      ]
+    },
+    {
+      "title": "Batch Size",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "liteserve_batch_size",
+          "legendFormat": "batch size"
+        }
+      ]
+    },
+    {
+      "title": "Queue Depth",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+      "targets": [
+        {
+          "expr": "liteserve_queue_depth",
+          "legendFormat": "queue depth"
+        }
+      ]
+    },
+    {
+      "title": "KV-Cache Utilization",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+      "targets": [
+        {
+          "expr": "liteserve_kv_cache_utilization",
+          "legendFormat": "utilization"
+        },
+        {
+          "expr": "liteserve_kv_cache_blocks_used",
+          "legendFormat": "blocks used"
+        }
+      ]
+    },
+    {
+      "title": "Requests (completed/failed/preempted)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "rate(liteserve_requests_total{status='completed'}[1m])",
+          "legendFormat": "completed/s"
+        },
+        {
+          "expr": "rate(liteserve_requests_total{status='failed'}[1m])",
+          "legendFormat": "failed/s"
+        },
+        {
+          "expr": "rate(liteserve_preemptions_total[1m])",
+          "legendFormat": "preemptions/s"
+        }
+      ]
+    },
+    {
+      "title": "Routing Decisions by Model",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        {
+          "expr": "liteserve_routing_decisions_total",
+          "legendFormat": "{{ model }}"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["liteserve", "llm", "inference"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30m", "to": "now" },
+  "title": "LiteServe - LLM Inference Engine",
+  "uid": "liteserve-main"
+}

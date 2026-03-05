@@ -1,0 +1,51 @@
+# LiteServe GPU Config — Mistral 7B with multi-model routing
+# Requires: NVIDIA GPU with >=24GB VRAM (RTX 3090 / A100)
+# For Llama 2, swap model paths and set HUGGING_FACE_HUB_TOKEN
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+
+models:
+  - name: "mistral-fp16"
+    path: "mistralai/Mistral-7B-v0.1"
+    quantization: null
+    max_model_len: 2048
+    default: true
+
+  # Uncomment these once FP16 works, to enable multi-model routing:
+  # - name: "mistral-int8"
+  #   path: "mistralai/Mistral-7B-v0.1"
+  #   quantization: "int8"
+  #   max_model_len: 2048
+
+  # - name: "mistral-int4"
+  #   path: "mistralai/Mistral-7B-v0.1"
+  #   quantization: "int4-bnb"
+  #   max_model_len: 2048
+
+scheduler:
+  max_batch_size: 32
+  max_waiting_time_ms: 100
+  memory_budget_pct: 0.9
+  preemption_policy: "fcfs"
+  scheduling_interval_ms: 1
+
+kv_cache:
+  block_size: 16
+  swap_space_gb: 2
+
+router:
+  strategy: "adaptive"
+  gpu_util_high_threshold: 0.85
+  gpu_util_low_threshold: 0.4
+  queue_depth_threshold: 20
+
+metrics:
+  enabled: true
+  port: 9090
+
+logging:
+  level: "INFO"
+  format: "json"

@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model weights (large files)
+*.bin
+*.safetensors
+*.gguf
+*.pt
+*.pth
+
+# HuggingFace cache
+.cache/
+
+# Benchmark results (regenerate locally)
+benchmarks/results.json
+benchmarks/perplexity_results.json
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# Pytest
+.pytest_cache/
+
+# Claude
+.claude/

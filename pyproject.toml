@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "liteserve"
+version = "0.1.0"
+description = "A lightweight LLM inference serving engine with continuous batching, paged KV-cache, quantization, and multi-model routing"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.1.0",
+    "transformers>=4.36.0",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "sse-starlette>=1.8.0",
+    "pyyaml>=6.0",
+    "prometheus-client>=0.19.0",
+    "bitsandbytes>=0.41.0",
+    "auto-gptq>=0.5.0",
+    "accelerate>=0.25.0",
+    "sentencepiece>=0.1.99",
+    "protobuf>=4.25.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.25.0",
+    "locust>=2.20.0",
+]
+
+[project.scripts]
+liteserve = "liteserve.server.app:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

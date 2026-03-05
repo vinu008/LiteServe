@@ -1,0 +1,49 @@
+# LiteServe Default Configuration
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+
+models:
+  - name: "llama-2-7b"
+    path: "meta-llama/Llama-2-7b-hf"
+    quantization: null  # null for FP16, "int8", "int4-gptq"
+    max_model_len: 2048
+    default: true
+
+  # Additional quantized variants (uncomment to enable multi-model routing)
+  # - name: "llama-2-7b-int8"
+  #   path: "meta-llama/Llama-2-7b-hf"
+  #   quantization: "int8"
+  #   max_model_len: 2048
+
+  # - name: "llama-2-7b-int4"
+  #   path: "TheBloke/Llama-2-7B-GPTQ"
+  #   quantization: "int4-gptq"
+  #   max_model_len: 2048
+
+scheduler:
+  max_batch_size: 32
+  max_waiting_time_ms: 100
+  memory_budget_pct: 0.9
+  preemption_policy: "fcfs"  # "fcfs" or "priority"
+  scheduling_interval_ms: 1
+
+kv_cache:
+  block_size: 16  # tokens per block
+  swap_space_gb: 1  # CPU swap space for preempted KV blocks
+
+router:
+  strategy: "adaptive"  # "quality_first", "throughput_first", "adaptive", "priority"
+  gpu_util_high_threshold: 0.85
+  gpu_util_low_threshold: 0.4
+  queue_depth_threshold: 20
+
+metrics:
+  enabled: true
+  port: 9090  # Prometheus metrics port
+
+logging:
+  level: "INFO"
+  format: "json"  # "json" or "text"
