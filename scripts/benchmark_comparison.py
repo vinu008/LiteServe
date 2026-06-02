@@ -17,15 +17,17 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logging.basicConfig(level=logging.WARNING)
 
+# Continuation-style prompts generate a real run of tokens across models
+# (question prompts can make small chat models emit EOS immediately).
 PROMPTS = [
-    "Explain quantum computing in simple terms.",
-    "Write a haiku about the ocean.",
-    "What is the capital of France?",
-    "Describe how a CPU works.",
-    "What are the benefits of exercise?",
-    "Explain recursion to a child.",
-    "How do airplanes fly?",
-    "What is photosynthesis?",
+    "Quantum computing works by",
+    "The ocean at sunset looked",
+    "The capital of France is a city that",
+    "A CPU executes instructions by",
+    "Regular exercise improves health because",
+    "Recursion is a technique where a function",
+    "Airplanes are able to fly because",
+    "Photosynthesis is the process through which",
 ]
 
 
@@ -87,6 +89,8 @@ def run_batched(engine, scheduler_cls, kv_cache_cls, sched_config, prompts, max_
         if batch.is_empty:
             break
 
+        # Prefill new requests individually, then decode the rest as one batch.
+        decode = []
         for request in list(batch.requests):
             if request.is_finished:
                 continue
@@ -94,8 +98,11 @@ def run_batched(engine, scheduler_cls, kv_cache_cls, sched_config, prompts, max_
                 engine.prefill(request)
                 total_tokens += 1
             elif request.status == RequestStatus.GENERATING:
-                engine.decode_step(request)
-                total_tokens += 1
+                decode.append(request)
+
+        if decode:
+            engine.decode_batch(decode)
+            total_tokens += len(decode)
 
     elapsed = time.perf_counter() - start
     results = []

@@ -193,17 +193,28 @@ class LiteServeApp:
                 logger.error("Generation loop error: %s", e, exc_info=True)
                 await asyncio.sleep(0.1)
 
+    def _engine_for(self, request: Request) -> Optional[InferenceEngine]:
+        engine = self.engines.get(request.assigned_model)
+        if engine is None:
+            engine = next(iter(self.engines.values()), None)
+        return engine
+
     def _run_inference_step(self, requests: list[Request]) -> None:
-        """Execute one inference step for all active requests (runs in thread)."""
+        """Execute one inference step for all active requests (runs in thread).
+
+        Prefill is run per request (one pass each); all GENERATING requests
+        sharing an engine are decoded together in a single batched forward
+        pass, which is where continuous batching gains its throughput.
+        """
+        # Group decode requests by engine so each engine batches its own.
+        decode_groups: dict[int, tuple[InferenceEngine, list[Request]]] = {}
+
         for request in requests:
             if request.is_finished:
                 continue
-
-            engine = self.engines.get(request.assigned_model)
+            engine = self._engine_for(request)
             if engine is None:
-                engine = next(iter(self.engines.values()), None)
-                if engine is None:
-                    continue
+                continue
 
             try:
                 if request.status == RequestStatus.PREFILL:
@@ -212,8 +223,7 @@ class LiteServeApp:
                     if request.time_to_first_token:
                         self.metrics.record_ttft(request.time_to_first_token)
                 elif request.status == RequestStatus.GENERATING:
-                    engine.decode_step(request)
-                    self.metrics.record_token_generated()
+                    decode_groups.setdefault(id(engine), (engine, []))[1].append(request)
             except Exception as e:
                 logger.error(
                     "Inference error for request %s: %s",
@@ -221,6 +231,16 @@ class LiteServeApp:
                 )
                 request.status = RequestStatus.FAILED
                 request.completion_time = time.time()
+
+        for engine, group in decode_groups.values():
+            try:
+                engine.decode_batch(group)
+                self.metrics.record_token_generated(len(group))
+            except Exception as e:
+                logger.error("Batched decode error: %s", e, exc_info=True)
+                for request in group:
+                    request.status = RequestStatus.FAILED
+                    request.completion_time = time.time()
 
     async def handle_completion(self, req: CompletionRequest) -> tuple[Request, asyncio.Event]:
         """Handle a completion request end-to-end."""
